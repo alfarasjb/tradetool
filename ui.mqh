@@ -76,8 +76,8 @@ struct OrderButton{
       DefYOffset = DefButtonHeight + settings.defY - 185; 
       OrdButtonYOffset = DefYOffset - 13;
       
-      Col_1_Offset = 10; // sell button
-      Col_2_Offset = 120; // buy button offset
+      Col_1_Offset = 15; // sell button
+      Col_2_Offset = 125; // buy button offset
       
       DefZOrd = 5; 
       DefButtonSpace = 10;

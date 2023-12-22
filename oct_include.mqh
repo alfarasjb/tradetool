@@ -8,6 +8,7 @@
 #include <B63/TradeOperations.mqh>
 #include <B63/Generic.mqh>
 #include "ui.mqh"
+#include "tests/tests.mqh"
 // SCREEN ADJUSTMENTS // 
 int screen_dpi = TerminalInfoInteger(TERMINAL_SCREEN_DPI);
 int scale_factor = (screen_dpi * 100) / 96;
@@ -107,7 +108,7 @@ struct InitSettings{
    
    InitSettings(){
       defX = 5; 
-      defY = 310;
+      defY = 315;
       font = "Segoe UI Semibold";
       font_bold = "Segoe UI Bold";
    }
@@ -121,6 +122,7 @@ input double   InpDefLots     = 0.01; //Volume
 input int      InpDefStop     = 200; //Default SL (Points)
 input int      InpDefTP       = 200; //Default TP (Points)
 input int      InpPointsStep  = 100; //Step (Points)
+input bool     InpRunTests    = false; // Run Unit Tests
 
 CObjects obj(settings.defX, settings.defY, 10, scale_factor, DefCorner);
 CTradeOperations op();
@@ -152,10 +154,11 @@ EMarketStatus MarketStatus;
 
 
 
-
 int OnInit() {
+   
    initData();
    drawUI();
+   if (InpRunTests) tradetool_tests.run_test();
    return(INIT_SUCCEEDED);
 }
 
@@ -299,7 +302,7 @@ void drawUI(){
    Main UI Method
    */
    
-   const int rectLabelWidth      = 225;
+   const int rectLabelWidth      = 235;
    
    const int headerLineLen       = 205;
    const int headerLineHeight    = 0;
@@ -567,7 +570,7 @@ int sendOrd(ENUM_ORDER_TYPE ord){
             break;
          case 5: 
             // sell stop 
-            if (entry < bid()) return -60;
+            if (entry > bid()) return -60;
             break;
          default: 
             break; 
