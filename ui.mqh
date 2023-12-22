@@ -82,12 +82,12 @@ struct OrderButton{
       DefZOrd = 5; 
       DefButtonSpace = 10;
       DefButtonFontSize = 10;
-      const string init_buttons[] = {"BTBuy", "BTSell", "BTSLBOOL", "BTTPBOOL", "BTVOLBOOL", "BTBuyLim", "BTSellLim"};
+      const string init_buttons[] = {"BTBuy", "BTSell", "BTSLBOOL", "BTTPBOOL", "BTVOLBOOL", "BTBuyLim", "BTSellLim", "BTBuyStop", "BTSellStop"};
       ArrayCopy(buttons, init_buttons);
    }
    
    // TEMPLATES: STANDARD ORDER BUTTONS 
-   void standard_order_button(int button_index, int column, int y_offset, double width_scale, double height_scale, color button_color, string label_handle, string label_name, int label_offset){
+   void standard_order_button(int button_index, int column, int y_offset, double width_scale, double height_scale, color button_color, string label_handle, string label_name, int label_offset, int label_x_offset){
       color font_color = themes.DefFontColor;
       color button_bord_color = themes.ButtonBordColor;
       
@@ -104,13 +104,16 @@ struct OrderButton{
          button_bord_color,
          DefZOrd      
       );
-      obj.CTextLabel(label_handle, column + 10,label_offset, label_name, settings.font, DefButtonFontSize, font_color);
+      obj.CTextLabel(label_handle, column + 10 + label_x_offset,label_offset, label_name, settings.font, DefButtonFontSize, font_color);
    }
  
-   void buy_market_button(){ standard_order_button(0, Col_2_Offset, DefYOffset, 1, 1, themes.BuyColor, "BuyLabel", "BUY", OrdButtonYOffset); }
-   void sell_market_button(){ standard_order_button(1, Col_1_Offset, DefYOffset, 1, 1, themes.SellColor, "SellLabel","SELL", OrdButtonYOffset); }
-   void buy_limit_button(){ standard_order_button(5, Col_2_Offset, DefYOffset - 100, 1, 0.6, themes.BuyColor, "BuyLimitLabel", "BUY LIMIT", OrdButtonYOffset - 100); } 
-   void sell_limit_button(){ standard_order_button(6, Col_1_Offset, DefYOffset - 100, 1, 0.6, themes.SellColor, "SellLimitLabel", "SELL LIMIT", OrdButtonYOffset - 100); }
+   void buy_market_button()   { standard_order_button(0, Col_2_Offset, DefYOffset, 1, 1, themes.BuyColor, "BuyLabel", "BUY", OrdButtonYOffset, 0); }
+   void sell_market_button()  { standard_order_button(1, Col_1_Offset, DefYOffset, 1, 1, themes.SellColor, "SellLabel","SELL", OrdButtonYOffset, 0); }
+   void buy_limit_button()    { standard_order_button(5, Col_2_Offset, DefYOffset - 100, 1, 0.6, themes.BuyColor, "BuyLimitLabel", "BUY LIMIT", OrdButtonYOffset - 100, 8); } 
+   void sell_limit_button()   { standard_order_button(6, Col_1_Offset, DefYOffset - 100, 1, 0.6, themes.SellColor, "SellLimitLabel", "SELL LIMIT", OrdButtonYOffset - 100, 8); }
+   void buy_stop_button()     { standard_order_button(7, Col_2_Offset, DefYOffset - 135, 1, 0.6, themes.BuyColor, "BuyStopLabel", "BUY STOP", OrdButtonYOffset - 135, 8); }
+   void sell_stop_button()    { standard_order_button(8, Col_1_Offset, DefYOffset - 135, 1, 0.6, themes.SellColor, "SellStopLabel", "SELL STOP", OrdButtonYOffset - 135, 8); }
+   
 };
 
 
@@ -144,7 +147,3 @@ struct Row{
    }
 };
 
-Layout layout;
-Themes themes;
-OrderButton ord_button;
-Row row_tpl;

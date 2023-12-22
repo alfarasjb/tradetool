@@ -32,6 +32,7 @@ struct SBTName{
    }
 };
 
+
 struct STrade{
    double entry;
    double stop;
@@ -106,7 +107,7 @@ struct InitSettings{
    
    InitSettings(){
       defX = 5; 
-      defY = 280;
+      defY = 310;
       font = "Segoe UI Semibold";
       font_bold = "Segoe UI Bold";
    }
@@ -127,6 +128,11 @@ CTradeOperations op();
 STrade trade;
 STrade errTrade;
 SMarket market;
+
+Layout layout;
+Themes themes;
+OrderButton ord_button;
+Row row_tpl;
 
 enum EMarketStatus{
    MarketIsOpen = 1,
@@ -213,6 +219,16 @@ void OnChartEvent(const int id, const long &lparam, const double &daram, const s
       if (sparam == "BTSellLim") {
          resetObject(sparam);
          int ret = sendOrd(ORDER_TYPE_SELL_LIMIT);
+         if (ret < 0) error(ret);
+      }
+      if (sparam == "BTBuyStop"){
+         resetObject(sparam);
+         int ret = sendOrd(ORDER_TYPE_BUY_STOP);
+         if (ret < 0) error(ret);
+      }
+      if (sparam == "BTSellStop"){
+         resetObject(sparam);
+         int ret = sendOrd(ORDER_TYPE_SELL_STOP);
          if (ret < 0) error(ret);
       }
       
@@ -312,6 +328,8 @@ void drawUI(){
    
    ord_button.buy_limit_button();
    ord_button.sell_limit_button();
+   ord_button.buy_stop_button();
+   ord_button.sell_stop_button();
    
    
    textFields();
@@ -434,6 +452,7 @@ const int ErrTradeDisabled    = 133;
 const int ErrMarketClosed     = 132;
 const int ErrBadVol           = 131;
 const int ErrBadStops         = 130;
+const int ErrAutoTrading      = 4109;
 #endif
 
 
@@ -451,6 +470,7 @@ const int errorCode = GetLastError();
          if (errorCode == ErrMarketClosed) logger("Order Send Failed. Market is closed.");
          if (errorCode == ErrBadVol) logger(StringFormat("Order Send Error: Invalid Volume. Vol: %f", errTrade.volume));
          if (errorCode == ErrBadStops) logger(StringFormat("Order Send Error: Invalid Stops. SL: %f, TP: %f", errTrade.stop, errTrade.target));
+         if (errorCode == ErrAutoTrading) logger("Order Send Failed. Auto Trading is Disabled.");
          break;
       case -10:
          logger(StringFormat("%s Market Buy. Price: %f, SL: %f, TP: %f", ask(), errTrade.entry, errTrade.stop, errTrade.target)); 
@@ -464,6 +484,12 @@ const int errorCode = GetLastError();
       case -40: 
          logger(StringFormat("%s Sell Limit. Price: %f, SL: %f, TP: %f", invalid_order(), errTrade.entry, errTrade.stop, errTrade.target)); 
          break; 
+      case -50: 
+         logger(StringFormat("%s Buy Stop. Price: %f, SL: %f, TP: %f", invalid_order(), errTrade.entry, errTrade.stop, errTrade.target)); 
+         break;
+      case -60: 
+         logger(StringFormat("%s Sell Stop. Price: %f, SL: %f, TP: %f", invalid_order(), errTrade.entry, errTrade.stop, errTrade.target)); 
+         break;
       default:
          logger(StringFormat("Order Send Failed. Code: %i", e));
          break;
@@ -520,16 +546,28 @@ int sendOrd(ENUM_ORDER_TYPE ord){
       errTrade.entry = entry;
       switch(ord){
          case 0: 
+            // market buy
             if ((sl > 0 && tp > 0)  && (sl > tp || sl > ask() || ask() > tp)) return -10;
             break; 
          case 1: 
+            // market sell
             if ((sl > 0 && tp > 0) && (tp > sl || tp > bid() || bid() > sl)) return -20;
             break; 
          case 2:
+            // buy limit
             if ((entry > ask() || sl > ask() || entry < tp)) return -30;
             break;
          case 3:
+            // sell limit
             if ((bid() > entry || bid() > sl || tp > entry)) return -40; 
+            break;
+         case 4: 
+            // buy stop
+            if (entry < ask()) return -50; 
+            break;
+         case 5: 
+            // sell stop 
+            if (entry < bid()) return -60;
             break;
          default: 
             break; 
@@ -588,16 +626,19 @@ void tradeParams(ENUM_ORDER_TYPE ord){
             break;
             
          case 2: 
+         case 4:
             stop = trade.slOn ? sl != 0 ? pending_price - sl * point() : 0 : 0;
             target = trade.tpOn ? tp != 0 ? pending_price + tp * point() : 0 : 0;
             trade.update(pending_price, stop, target, (float)vol, trade.slOn, trade.tpOn, true, (int)sl, (int)tp);
             break;
             
          case 3: 
+         case 5:
             stop = trade.slOn ? sl != 0 ? pending_price + sl * point() : 0 : 0;
-            target = trade.tpOn ? tp != 0 ? pending_price + tp * point() : 0 : 0;
+            target = trade.tpOn ? tp != 0 ? pending_price - tp * point() : 0 : 0;
             trade.update(pending_price, stop, target, (float)vol, trade.slOn, trade.tpOn, true, (int)sl, (int)tp);
             break;
+            
        
          default:
             break;
