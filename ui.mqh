@@ -1,15 +1,50 @@
 
-#include "oct_include.mqh"
 
+
+#include "oct_include.mqh"
+#include <B63/CObjects.mqh>
+
+
+#define app_font           "Segoe UI Semibold"
+#define app_font_bold      "Segoe UI Bold"
+#define app_def_y          315
+#define app_def_x          5
+#define app_corner         CORNER_LEFT_LOWER
+#define app_line_style        STYLE_SOLID
+#define app_border_type       BORDER_FLAT
+#define app_main_border_type  BORDER_RAISED
+#define app_line_width        1
+
+int screen_dpi = TerminalInfoInteger(TERMINAL_SCREEN_DPI);
+int scale_factor = (screen_dpi * 100) / 96;
+
+struct InitSettings{
+   int defX;
+   int defY;
+   string font;
+   string font_bold; 
+   
+   InitSettings(){
+      defX = 5; 
+      defY = 315;
+      font = "Segoe UI Semibold";
+      font_bold = "Segoe UI Bold";
+   }
+};
+
+InitSettings settings;
+
+//CObjects obj(app_def_x, app_def_y, 10, scale_factor, app_corner);
+CObjects obj(app_def_x, app_def_y, 10, scale_factor, app_corner);
 struct Layout{
    int row1; 
    int row2; 
    int row3; 
    
    Layout(){
-      row1 = settings.defY - 45; 
-      row2 = settings.defY - 75; 
-      row3 = settings.defY - 105;
+      row1 = app_def_y - 45; 
+      row2 = app_def_y - 75; 
+      row3 = app_def_y - 105;
    }
 };
 
@@ -73,7 +108,7 @@ struct OrderButton{
    OrderButton(){
       DefButtonWidth = 105;
       DefButtonHeight = 50;
-      DefYOffset = DefButtonHeight + settings.defY - 185; 
+      DefYOffset = DefButtonHeight + app_def_y - 185; 
       OrdButtonYOffset = DefYOffset - 13;
       
       Col_1_Offset = 15; // sell button
@@ -95,8 +130,8 @@ struct OrderButton{
          buttons[button_index],
          column, 
          y_offset,
-         DefButtonWidth * width_scale,
-         DefButtonHeight * height_scale,
+         (int)(DefButtonWidth * width_scale),
+         (int)(DefButtonHeight * height_scale),
          DefButtonFontSize, 
          "",
          font_color,
@@ -104,7 +139,7 @@ struct OrderButton{
          button_bord_color,
          DefZOrd      
       );
-      obj.CTextLabel(label_handle, column + 10 + label_x_offset,label_offset, label_name, settings.font, DefButtonFontSize, font_color);
+      obj.CTextLabel(label_handle, column + 10 + label_x_offset,label_offset, label_name, app_font, DefButtonFontSize, font_color);
    }
  
    void buy_market_button()   { standard_order_button(0, Col_2_Offset, DefYOffset, 1, 1, themes.BuyColor, "BuyLabel", "BUY", OrdButtonYOffset, 0); }
@@ -147,3 +182,156 @@ struct Row{
    }
 };
 
+
+
+void drawUI(){
+   /*
+   Main UI Method
+   */
+   
+   const int rectLabelWidth      = 235;
+   
+   const int headerLineLen       = 205;
+   const int headerLineHeight    = 0;
+   
+   
+   const int headerY             = app_def_y - 20;
+   const int headerX             = 15;
+   const int headerFontSize      = 13;
+   
+   
+   // MISC 
+   //const ENUM_LINE_STYLE style   = STYLE_SOLID;
+   //const ENUM_BORDER_TYPE border = BORDER_FLAT;
+   //const ENUM_BORDER_TYPE main   = BORDER_RAISED;
+   //const int lineWidth           = 1;
+   
+   //Temporarily Disabled. marketStatus is buggy
+   //const string headerString     = Sym + " | " + marketStatus();
+   const string headerString     = Sym;
+   
+   obj.CRectLabel("Buttons", app_def_x, app_def_y, rectLabelWidth, app_def_y - 5, app_main_border_type, themes.ButtonBordColor, app_line_style, 2);  
+   ord_button.buy_market_button();
+   ord_button.sell_market_button();
+   
+   obj.CTextLabel("Symbol", headerX, headerY, headerString, app_font, headerFontSize, themes.DefFontColor);
+   obj.CRectLabel("Header", headerX, headerY - 15, headerLineLen, headerLineHeight, app_border_type, themes.DefFontColor, app_line_style, 1);
+   obj.CRectLabel("Header2", headerX, headerY - 175, headerLineLen, headerLineHeight, app_border_type, themes.DefFontColor, app_line_style, 1);  
+   
+   ord_button.buy_limit_button();
+   ord_button.sell_limit_button();
+   ord_button.buy_stop_button();
+   ord_button.sell_stop_button();
+   
+   
+   textFields();
+   updatePrice();
+}
+
+string marketStatus(){
+   string val = "";
+   switch(MarketStatus){
+      case 1: 
+         val = "Open";
+         break;
+      case 2:
+         val = "Closed";
+         break;
+      case 3:
+         val = "Disabled";
+         break;
+      default:
+         val = "";
+         break;
+   }
+   return val;
+}
+
+void updatePrice(){
+   const int yOffset       = app_def_y - 170;
+   const int fontSize      = 13;
+   
+
+   obj.CTextLabel("BuyPrice", ord_button.Col_2_Offset + ord_button.DefButtonSpace, yOffset, norm(ask()), app_font_bold, fontSize, themes.DefFontColor);
+   obj.CTextLabel("SellPrice", ord_button.Col_1_Offset + ord_button.DefButtonSpace , yOffset, norm(bid()), app_font_bold, fontSize, themes.DefFontColor);
+
+}
+
+
+double slPts() { return getValues("EDITSL"); }
+double tpPts() { return getValues("EDITTP"); }
+
+
+void textFields(){
+
+   const int xOffset      = 15;
+   
+   obj.CTextLabel("TFSL", xOffset, layout.row1 - 13, "SL", app_font, ord_button.DefButtonFontSize, themes.DefFontColor);
+   obj.CTextLabel("TFTP", xOffset, layout.row2 - 12, "TP", app_font, ord_button.DefButtonFontSize, themes.DefFontColor);
+   obj.CTextLabel("TFVol", xOffset, layout.row3 - 11, "VOL", app_font, ord_button.DefButtonFontSize, themes.DefFontColor);
+   obj.CTextLabel("TFVolLots", xOffset + 175, layout.row3 - 11, "Lots", app_font, ord_button.DefButtonFontSize, themes.DefFontColor);
+   obj.CTextLabel("TFPending", xOffset, layout.row3 - 110, "PENDING", app_font, ord_button.DefButtonFontSize, themes.DefFontColor);
+   
+   slRow();
+   tpRow();
+   volRow();
+   poRow();
+
+}
+
+void slRow(double inp, bool state)  { createRow("EDITSL", ord_button.buttons[2], ord_button.buttons[2]+ "NOT", layout.row1, (string)inp, state, true);}
+void slRow(bool state)              { slRow(slInput, state); }
+void slRow(double inp)              { slRow(inp, trade.slOn);}
+void slRow()                        { slRow(slInput, trade.slOn); } // Default State
+
+void tpRow(double inp, bool state)  { createRow("EDITTP",ord_button.buttons[3], ord_button.buttons[3] + "NOT", layout.row2, (string)inp, state, true);}
+void tpRow(bool state)              { tpRow(tpInput, state); }
+void tpRow(double inp)              { tpRow(inp, trade.tpOn); }
+void tpRow()                        { tpRow(tpInput, trade.tpOn); } 
+
+void volRow(double inp)             { createRow("EDITVOL", ord_button.buttons[4], ord_button.buttons[4] + "NOT", layout.row3, norm(inp, 2), trade.volOn, false);}
+void volRow()                       { volRow(trade.volume); }
+
+void poRow(double inp)              { createRow("EDITPENDING", ord_button.buttons[4], ord_button.buttons[4] + "NOT", layout.row3 - 100, (string)inp, trade.volOn, false, 80); }
+void poRow()                        { poRow(trade.entry); }
+
+
+void createRow(string edit, string enabled, string disabled, int row, string editText, bool state, bool showSwitch, int bgX){
+
+   // OFFSET
+   const int space         = 3;
+   
+   const int btDisabled    = bgX + row_tpl.BGWidth + 5;
+   const int btEnabled     = btDisabled + row_tpl.BTSize - 2;
+   
+   // COLORS
+   const color togOnCol    = state ? themes.colors[0] : themes.colors[4];
+   const color togOffCol   = state ? themes.colors[2] : themes.colors[0];  
+   // FONTS
+   // MISC 
+   obj.CAdjRow(edit, 
+      bgX, 
+      row, 
+      row_tpl.BGWidth, 
+      row_tpl.BGHeight, 
+      row_tpl.EditWidth, 
+      row_tpl.EditHeight, 
+      row_tpl.BTSize, 
+      editText, 
+      row_tpl.FontSize, 
+      themes.RowButtonBG,
+      themes.RowButtonBord, 
+      themes.DefFontColor, 
+      themes.EditCol);
+      
+   if (showSwitch){
+      // name1, name2, x, y, width, height, col1, col2, state
+      obj.CSwitch(enabled, disabled, btDisabled, row - space, row_tpl.BTSize, row_tpl.BTSize, togOnCol, togOffCol, state);
+   }
+   
+}
+
+void createRow(string edit, string enabled, string disabled, int row, string editText, bool state, bool showSwitch){
+   const int bgX = 50;
+   createRow(edit, enabled, disabled, row, editText, state, showSwitch, bgX);
+}

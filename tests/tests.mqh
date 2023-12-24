@@ -56,6 +56,10 @@ struct Tests{
       ArrayResize(added, current_size + 1);
       added[current_size] = test_function;
    }
+   
+   void reset_tests(){
+      ArrayFree(added);
+   }
 };
 
 TestFunction testfunc;
@@ -160,6 +164,8 @@ class TradeTool_Tests{
       /*
       Test conditions
       */
+      tests.reset_tests();
+      
       test_min_lot(true, 0.01);
       test_min_lot(false, 0.02);
       test_max_lot(true, 100000);
