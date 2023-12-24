@@ -1,17 +1,15 @@
+//###<Experts/B63/b63-mt4-experts/Prod/oct/TradeTool.mq4>
 
-#define app_copyright "Copyright 2023, block63"
-#define app_version  "1.11"
-#define app_description "A basic order management solution that allows Stop Loss and Take Profit levels to be automatically placed on market orders based on set POINTS distance."
+
 #property strict
 
 #include <B63/CObjects.mqh>
 #include <B63/TradeOperations.mqh>
 #include <B63/Generic.mqh>
 #include "ui.mqh"
+#include "tests/tests.mqh"
 // SCREEN ADJUSTMENTS // 
-int screen_dpi = TerminalInfoInteger(TERMINAL_SCREEN_DPI);
-int scale_factor = (screen_dpi * 100) / 96;
-ENUM_BASE_CORNER DefCorner = CORNER_LEFT_LOWER;
+
 
 // ENUM AND STRUCT //
 
@@ -44,7 +42,17 @@ struct STrade{
    int stopPts;
    int tpPts;
    
-   void update(double InpEntry, double InpStop, double InpTarget, float InpVolume, double InpSLOn, double InpTPOn, double InpVolOn, int InpSLPts, int InpTPPts){
+   void update(
+      double InpEntry, 
+      double InpStop, 
+      double InpTarget, 
+      float InpVolume, 
+      double InpSLOn, 
+      double InpTPOn, 
+      double InpVolOn, 
+      int InpSLPts, 
+      int InpTPPts) {
+      
       entry = InpEntry;
       stop = InpStop;
       target = InpTarget;
@@ -99,30 +107,15 @@ struct SMarket{
    
 };
 
-struct InitSettings{
-   int defX;
-   int defY;
-   string font;
-   string font_bold; 
-   
-   InitSettings(){
-      defX = 5; 
-      defY = 310;
-      font = "Segoe UI Semibold";
-      font_bold = "Segoe UI Bold";
-   }
-};
-
-InitSettings settings;
-
 input int      InpMagic       = 232323; //Magic Number
 EMode    InpMode        = Points; //Mode (Price/Points)
 input double   InpDefLots     = 0.01; //Volume
 input int      InpDefStop     = 200; //Default SL (Points)
 input int      InpDefTP       = 200; //Default TP (Points)
 input int      InpPointsStep  = 100; //Step (Points)
+input bool     InpRunTests    = false; // Run Unit Tests
 
-CObjects obj(settings.defX, settings.defY, 10, scale_factor, DefCorner);
+
 CTradeOperations op();
 
 STrade trade;
@@ -152,20 +145,15 @@ EMarketStatus MarketStatus;
 
 
 
-
 int OnInit() {
+   
    initData();
    drawUI();
+   if (InpRunTests) tradetool_tests.run_test();
    return(INIT_SUCCEEDED);
 }
-
-void OnDeinit(const int reason) {
-   ObjectsDeleteAll(0, 0, -1);
-}
-
-void OnTick() {
-   updatePrice();
-}
+void OnDeinit(const int reason)  { ObjectsDeleteAll(0, 0, -1); }
+void OnTick()                    { updatePrice(); }
 
 EMarketStatus status(){
    if (TradeDisabled) return TradingDisabled;
@@ -199,7 +187,9 @@ void initData(){
 }
 
 void OnChartEvent(const int id, const long &lparam, const double &daram, const string &sparam){
+
    if (CHARTEVENT_OBJECT_CLICK){  
+   
       if (sparam == "BTBuy") {
          resetObject(sparam);
          int ret = sendOrd(ORDER_TYPE_BUY);
@@ -279,8 +269,11 @@ void OnChartEvent(const int id, const long &lparam, const double &daram, const s
 }
 
 bool swButton(int sw, string sparam){
+
    bool ret = False;
+   
    switch(sw){
+   
       case 1: 
          if (sparam == "BTSLBOOL" || sparam == "BTSLBOOLNOT") ret = true;
          break;
@@ -294,159 +287,10 @@ bool swButton(int sw, string sparam){
    return ret;
 }
 
-void drawUI(){
-   /*
-   Main UI Method
-   */
-   
-   const int rectLabelWidth      = 225;
-   
-   const int headerLineLen       = 205;
-   const int headerLineHeight    = 0;
-   
-   
-   const int headerY             = settings.defY - 20;
-   const int headerX             = 15;
-   const int headerFontSize      = 13;
-   
-   
-   // MISC 
-   const ENUM_LINE_STYLE style   = STYLE_SOLID;
-   const ENUM_BORDER_TYPE border = BORDER_FLAT;
-   const ENUM_BORDER_TYPE main   = BORDER_RAISED;
-   const int lineWidth           = 1;
-   
-   const string headerString     = Sym + " | " + marketStatus();
-   
-   obj.CRectLabel("Buttons", settings.defX, settings.defY, rectLabelWidth, settings.defY - 5, main, themes.ButtonBordColor, style, 2);  
-   ord_button.buy_market_button();
-   ord_button.sell_market_button();
-   
-   obj.CTextLabel("Symbol", headerX, headerY, headerString, settings.font, headerFontSize, themes.DefFontColor);
-   obj.CRectLabel("Header", headerX, headerY - 15, headerLineLen, headerLineHeight, border, themes.DefFontColor, style, 1);
-   obj.CRectLabel("Header2", headerX, headerY - 175, headerLineLen, headerLineHeight, border, themes.DefFontColor, style, 1);  
-   
-   ord_button.buy_limit_button();
-   ord_button.sell_limit_button();
-   ord_button.buy_stop_button();
-   ord_button.sell_stop_button();
-   
-   
-   textFields();
-   updatePrice();
-}
-
-string marketStatus(){
-   string val = "";
-   switch(MarketStatus){
-      case 1: 
-         val = "Open";
-         break;
-      case 2:
-         val = "Closed";
-         break;
-      case 3:
-         val = "Disabled";
-         break;
-      default:
-         val = "";
-         break;
-   }
-   return val;
-}
-
-void updatePrice(){
-   const int yOffset       = settings.defY - 170;
-   const int fontSize      = 13;
-   
-
-   obj.CTextLabel("BuyPrice", ord_button.Col_2_Offset + ord_button.DefButtonSpace, yOffset, norm(ask()), settings.font_bold, fontSize, themes.DefFontColor);
-   obj.CTextLabel("SellPrice", ord_button.Col_1_Offset + ord_button.DefButtonSpace , yOffset, norm(bid()), settings.font_bold, fontSize, themes.DefFontColor);
-
-}
-
-
-double slPts() { return getValues("EDITSL"); }
-double tpPts() { return getValues("EDITTP"); }
-
-
-void textFields(){
-
-   const int xOffset      = 15;
-   
-   obj.CTextLabel("TFSL", xOffset, layout.row1 - 13, "SL", settings.font, ord_button.DefButtonFontSize, themes.DefFontColor);
-   obj.CTextLabel("TFTP", xOffset, layout.row2 - 12, "TP", settings.font, ord_button.DefButtonFontSize, themes.DefFontColor);
-   obj.CTextLabel("TFVol", xOffset, layout.row3 - 11, "VOL", settings.font, ord_button.DefButtonFontSize, themes.DefFontColor);
-   obj.CTextLabel("TFVolLots", xOffset + 175, layout.row3 - 11, "Lots", settings.font, ord_button.DefButtonFontSize, themes.DefFontColor);
-   obj.CTextLabel("TFPending", xOffset, layout.row3 - 110, "PENDING", settings.font, ord_button.DefButtonFontSize, themes.DefFontColor);
-   
-   slRow();
-   tpRow();
-   volRow();
-   poRow();
-
-}
-
-void slRow(double inp, bool state)  { createRow("EDITSL", ord_button.buttons[2], ord_button.buttons[2]+ "NOT", layout.row1, (string)inp, state, true);}
-void slRow(bool state)              { slRow(slInput, state); }
-void slRow(double inp)              { slRow(inp, trade.slOn);}
-void slRow()                        { slRow(slInput, trade.slOn); } // Default State
-
-void tpRow(double inp, bool state)  { createRow("EDITTP",ord_button.buttons[3], ord_button.buttons[3] + "NOT", layout.row2, (string)inp, state, true);}
-void tpRow(bool state)              { tpRow(tpInput, state); }
-void tpRow(double inp)              { tpRow(inp, trade.tpOn); }
-void tpRow()                        { tpRow(tpInput, trade.tpOn); } 
-
-void volRow(double inp)             { createRow("EDITVOL", ord_button.buttons[4], ord_button.buttons[4] + "NOT", layout.row3, norm(inp, 2), trade.volOn, false);}
-void volRow()                       { volRow(trade.volume); }
-
-void poRow(double inp)              { createRow("EDITPENDING", ord_button.buttons[4], ord_button.buttons[4] + "NOT", layout.row3 - 100, (string)inp, trade.volOn, false, 80); }
-void poRow()                        { poRow(trade.entry); }
-
-
-void createRow(string edit, string enabled, string disabled, int row, string editText, bool state, bool showSwitch, int bgX){
-
-   // OFFSET
-   const int space         = 3;
-   
-   const int btDisabled    = bgX + row_tpl.BGWidth + 5;
-   const int btEnabled     = btDisabled + row_tpl.BTSize - 2;
-   
-   // COLORS
-   const color togOnCol    = state ? themes.colors[0] : themes.colors[4];
-   const color togOffCol   = state ? themes.colors[2] : themes.colors[0];  
-   // FONTS
-   // MISC 
-   obj.CAdjRow(edit, 
-      bgX, 
-      row, 
-      row_tpl.BGWidth, 
-      row_tpl.BGHeight, 
-      row_tpl.EditWidth, 
-      row_tpl.EditHeight, 
-      row_tpl.BTSize, 
-      editText, 
-      row_tpl.FontSize, 
-      themes.RowButtonBG,
-      themes.RowButtonBord, 
-      themes.DefFontColor, 
-      themes.EditCol);
-      
-   if (showSwitch){
-      // name1, name2, x, y, width, height, col1, col2, state
-      obj.CSwitch(enabled, disabled, btDisabled, row - space, row_tpl.BTSize, row_tpl.BTSize, togOnCol, togOffCol, state);
-   }
-   
-}
-
-void createRow(string edit, string enabled, string disabled, int row, string editText, bool state, bool showSwitch){
-   const int bgX = 50;
-   createRow(edit, enabled, disabled, row, editText, state, showSwitch, bgX);
-}
-
 // ERROR HANDLING //
 
 void error(int e){
+
 #ifdef __MQL4__
 const int ErrTradeDisabled    = 133;
 const int ErrMarketClosed     = 132;
@@ -464,7 +308,9 @@ const int ErrBadStops         = 10016;
 #endif
 
 const int errorCode = GetLastError();
+
    switch(e){
+   
       case 0:
          if (errorCode == ErrTradeDisabled) logger("Order Send Failed. Trading is disabled for current symbol");
          if (errorCode == ErrMarketClosed) logger("Order Send Failed. Market is closed.");
@@ -496,8 +342,8 @@ const int errorCode = GetLastError();
    }
 }
 
-string invalid_order() { return "Invalid Order Parameters for "; }
-void logger(string message){ PrintFormat("LOGGER: %s", message); }
+string invalid_order()        { return "Invalid Order Parameters for "; }
+void logger(string message)   { PrintFormat("LOGGER: %s", message); }
 
 // ERROR HANDLING // 
 
@@ -519,10 +365,12 @@ bool toggle(bool toggle, Togg rowFunc){
 }
 
 double adj(double inp, double step, Adj rowFunc, string sparam){
+
    return adj (inp, step, -1, rowFunc, sparam);
 }
 
 double adj(double inp, double step, double limit, Adj rowFunc, string sparam){
+
    double val = inp + step;
    resetObject(sparam);
    if (step < 0 && limit >= 0 && inp <= limit) return inp;
@@ -532,19 +380,25 @@ double adj(double inp, double step, double limit, Adj rowFunc, string sparam){
 }
 
 int sendOrd(ENUM_ORDER_TYPE ord){
+
    double val = StringToDouble(getText("EDITVOL"));
    tradeParams(ord);
    double entry = trade.entry;
    double sl = trade.stop;
    double tp = trade.target;
+   
    int ticket = op.SendOrder(ord, val, trade.entry, sl, tp, InpMagic);
    logger(StringFormat("ORDER: %s, Volume: %f, Entry: %f, SL: %f, TP: %f", EnumToString(ord), val, entry, sl, tp));
+   
    if (ticket < 0) {
+   
       errTrade.stop = sl;
       errTrade.target = tp;
       errTrade.volume = trade.volume;
       errTrade.entry = entry;
+      
       switch(ord){
+      
          case 0: 
             // market buy
             if ((sl > 0 && tp > 0)  && (sl > tp || sl > ask() || ask() > tp)) return -10;
@@ -567,7 +421,7 @@ int sendOrd(ENUM_ORDER_TYPE ord){
             break;
          case 5: 
             // sell stop 
-            if (entry < bid()) return -60;
+            if (entry > bid()) return -60;
             break;
          default: 
             break; 
@@ -583,10 +437,9 @@ int sendOrd(ENUM_ORDER_TYPE ord){
 
 // MISC FUNCTIONS //
 string norm(double val)             { return DoubleToString(val, market.digits); }
-
 string norm(double val, int digits) { return DoubleToString(val, digits); }
 
-double minPoints(){ return 0; }
+double minPoints()                  { return 0; }
 
 bool minPoints(double points){
    if (points > 0) return false;
@@ -594,16 +447,19 @@ bool minPoints(double points){
 }
 
 bool minLot(double lot){
+
    if (lot > market.minLot) return false;
    return true;
 }
 
 bool maxLot(double lot){
+
    if (lot < market.maxLot) return false;
    return true;
 }
 
 void tradeParams(ENUM_ORDER_TYPE ord){
+
    double sl = getValues("EDITSL");
    double tp = getValues("EDITTP");
    double vol = getValues("EDITVOL");
