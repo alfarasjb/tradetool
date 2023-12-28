@@ -8,27 +8,11 @@
 #include <B63/Generic.mqh>
 #include "ui.mqh"
 #include "tests/tests.mqh"
+#include "definition.mqh"
 // SCREEN ADJUSTMENTS // 
 
 
 // ENUM AND STRUCT //
-
-enum EMode{
-   Points = 1,
-   Price = 2,
-};
-
-struct SBTName{
-   string plus;
-   string minus;
-   string toggle;
-   
-   SBTName(){
-      plus = "";
-      minus = "";
-      toggle = "";
-   }
-};
 
 
 struct STrade{
@@ -108,7 +92,7 @@ struct SMarket{
 };
 
 input int      InpMagic       = 232323; //Magic Number
-EMode    InpMode        = Points; //Mode (Price/Points)
+MODE    InpMode        = Points; //Mode (Price/Points)
 input double   InpDefLots     = 0.01; //Volume
 input int      InpDefStop     = 200; //Default SL (Points)
 input int      InpDefTP       = 200; //Default TP (Points)
@@ -122,16 +106,7 @@ STrade trade;
 STrade errTrade;
 SMarket market;
 
-Layout layout;
-Themes themes;
-OrderButton ord_button;
-Row row_tpl;
 
-enum EMarketStatus{
-   MarketIsOpen = 1,
-   MarketIsClosed = 2,
-   TradingDisabled = 3,
-};
 
 static double slInput = InpDefStop;
 static double tpInput = InpDefTP;
@@ -140,7 +115,7 @@ static bool   MarketOpen;
 static bool   TradeDisabled;
 static bool   TradingDay;
 static bool   TradingSession;
-EMarketStatus MarketStatus;
+MARKET_STATUS MarketStatus;
 
 
 
@@ -148,14 +123,18 @@ EMarketStatus MarketStatus;
 int OnInit() {
    
    initData();
-   drawUI();
+   
+   //tradetool_app_beta.InitializeUIElements();
+   tradetool_app.InitializeUIElements();
+   tradetool_app.UpdatePrice(norm(ask()), norm(bid()));
+   textFields();
    if (InpRunTests) tradetool_tests.run_test();
    return(INIT_SUCCEEDED);
 }
 void OnDeinit(const int reason)  { ObjectsDeleteAll(0, 0, -1); }
-void OnTick()                    { updatePrice(); }
+void OnTick()                    { tradetool_app.UpdatePrice(norm(ask()), norm(bid())); }
 
-EMarketStatus status(){
+MARKET_STATUS status(){
    if (TradeDisabled) return TradingDisabled;
    if (TradingDay && TradingSession) return MarketIsOpen;
    return MarketIsClosed;
@@ -173,11 +152,11 @@ void initData(){
    //trade.reInit(market.minLot);
    trade.update();
    switch(InpMode){
-      case 1:
+      case Points:
          //slInput = InpDefPoints;
          //tpInput = InpDefPoints;
          break;
-      case 2:
+      case Price:
          slInput = bid();
          tpInput = bid();
          break;
@@ -187,36 +166,36 @@ void initData(){
 }
 
 void OnChartEvent(const int id, const long &lparam, const double &daram, const string &sparam){
-
-   if (CHARTEVENT_OBJECT_CLICK){  
+   PrintFormat("ID: %i, LPARAM: %i, DARAM: %f, SPARAM: %s", id, lparam, daram, sparam);
    
-      if (sparam == "BTBuy") {
+   if (CHARTEVENT_OBJECT_CLICK){  
+      if (sparam == tradetool_app.market_buy.button_name) {
          resetObject(sparam);
          int ret = sendOrd(ORDER_TYPE_BUY);
          if (ret < 0) error(ret);
       }
-      if (sparam == "BTSell") {
+      if (sparam == tradetool_app.market_sell.button_name) {
          resetObject(sparam);
          int ret = sendOrd(ORDER_TYPE_SELL);
          if (ret < 0) error(ret);
       }
-      if (sparam == "BTBuyLim") {
+      if (sparam == tradetool_app.buy_limit.button_name) {
          resetObject(sparam);
          int ret = sendOrd(ORDER_TYPE_BUY_LIMIT);
          if (ret < 0) error(ret);
          
       }
-      if (sparam == "BTSellLim") {
+      if (sparam == tradetool_app.sell_limit.button_name) {
          resetObject(sparam);
          int ret = sendOrd(ORDER_TYPE_SELL_LIMIT);
          if (ret < 0) error(ret);
       }
-      if (sparam == "BTBuyStop"){
+      if (sparam == tradetool_app.buy_stop.button_name){
          resetObject(sparam);
          int ret = sendOrd(ORDER_TYPE_BUY_STOP);
          if (ret < 0) error(ret);
       }
-      if (sparam == "BTSellStop"){
+      if (sparam == tradetool_app.sell_stop.button_name){
          resetObject(sparam);
          int ret = sendOrd(ORDER_TYPE_SELL_STOP);
          if (ret < 0) error(ret);
