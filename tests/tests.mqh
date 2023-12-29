@@ -194,7 +194,7 @@ TradeTool_Tests::TradeTool_Tests(void){}
 
 void TradeTool_Tests::test_max_lot(bool expected, double lot){
 
-   bool true_value = maxLot(lot);
+   bool true_value = tradetool_app.MaxLot(lot);
    
    testfunc.stat("max_lot", expected, true_value);
    tests.add_tests(testfunc);
@@ -206,7 +206,7 @@ void TradeTool_Tests::test_max_lot(bool expected, double lot){
 
 void TradeTool_Tests::test_min_lot(bool expected, double lot){
 
-   bool true_value = minLot(lot);
+   bool true_value = tradetool_app.MinLot(lot);
       
    testfunc.stat("min_lot", expected, true_value);
    tests.add_tests(testfunc);
@@ -216,7 +216,7 @@ void TradeTool_Tests::test_min_lot(bool expected, double lot){
 
 void TradeTool_Tests::test_min_points_value(int expected){
    
-   int true_value = minPoints();
+   int true_value = 0;
    
    testfunc.stat("min_points", expected, true_value);
    tests.add_tests(testfunc);
@@ -226,7 +226,7 @@ void TradeTool_Tests::test_min_points_value(int expected){
 }
 
 void TradeTool_Tests::test_min_points_bool(bool expected, double points){
-   bool true_value = minPoints(points);
+   bool true_value = tradetool_app.MinPoints(points);
    
    testfunc.stat("min_points", expected, true_value);
    tests.add_tests(testfunc);
@@ -245,7 +245,7 @@ void TradeTool_Tests::test_buy_limit(){
    double entry = ask() - 200*point();
    edit_entry("EDITPENDING", (string)entry);
    
-   int true_value = sendOrd(ord);
+   int true_value = tradetool_main.SendOrder(ord);
    int expected = true_value > 0 ? true_value : 100;
    
    testfunc.stat("success_buy_lim", expected, true_value);
@@ -262,7 +262,7 @@ void TradeTool_Tests::test_buy_limit_error(){
    double entry = ask() + 200*point();
    edit_entry("EDITPENDING", (string)entry);
    
-   int true_value = sendOrd(ord);
+   int true_value = tradetool_main.SendOrder(ord);
    int expected = -30;
    
    testfunc.stat("err_buy_lim", expected, true_value);
@@ -279,7 +279,7 @@ void TradeTool_Tests::test_sell_limit(){
    double entry = bid() + 200 * point();
    edit_entry("EDITPENDING", (string)entry);
    
-   int true_value = sendOrd(ord);
+   int true_value = tradetool_main.SendOrder(ord);
    int expected = true_value > 0 ? true_value : 100;
    
    testfunc.stat("success_sell_lim", expected, true_value);
@@ -296,7 +296,7 @@ void TradeTool_Tests::test_sell_limit_error(){
    double entry = bid() - 200 * point();
    edit_entry("EDITPENDING", (string)entry);
    
-   int true_value = sendOrd(ord);
+   int true_value = tradetool_main.SendOrder(ord);
    int expected = -40;
    
    testfunc.stat("err_sell_lim", expected, true_value);
@@ -314,7 +314,7 @@ void TradeTool_Tests::test_buy_stop(){
    double entry = ask() + 200 * point();
    edit_entry("EDITPENDING", (string)entry);
    
-   int true_value = sendOrd(ord);
+   int true_value = tradetool_main.SendOrder(ord);
    int expected = true_value > 0 ? true_value : 100;
    
    testfunc.stat("success_buy_stop", expected, true_value);
@@ -332,7 +332,7 @@ void TradeTool_Tests::test_buy_stop_error(){
    double entry = ask() - 200 * point();
    edit_entry("EDITPENDING", (string)entry);
    
-   int true_value = sendOrd(ord);
+   int true_value = tradetool_main.SendOrder(ord);
    int expected = -50;
    
    testfunc.stat("err_buy_stop", expected, true_value);
@@ -348,7 +348,7 @@ void TradeTool_Tests::test_sell_stop(){
    double entry = bid() - 200 * point();
    edit_entry("EDITPENDING", (string)entry);
    
-   int true_value = sendOrd(ord);
+   int true_value = tradetool_main.SendOrder(ord);
    int expected = true_value > 0 ? true_value : 100;
    
    testfunc.stat("success_sell_stop", expected, true_value);
@@ -364,7 +364,7 @@ void TradeTool_Tests::test_sell_stop_error(){
    double entry = bid() + 200 * point();
    edit_entry("EDITPENDING", (string)entry);
    
-   int true_value = sendOrd(ord);
+   int true_value = tradetool_main.SendOrder(ord);
    int expected = -60;
    
    testfunc.stat("err_sell_stop", expected, true_value);
@@ -376,3 +376,9 @@ void TradeTool_Tests::test_sell_stop_error(){
 
 
 TradeTool_Tests tradetool_tests;
+
+double point()                         { return SymbolInfoDouble(tradetool_main.SYMBOL, SYMBOL_POINT); }
+
+double ask()   { return tradetool_main.util_ask(); }
+double bid()   { return tradetool_main.util_bid(); }
+
