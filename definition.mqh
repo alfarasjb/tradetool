@@ -36,3 +36,8 @@ string   UI_FONT_BOLD         = "Segoe UI Bold";
 
 int      FONT_SIZE            = 10;
 
+
+int      UI_X                 = 5;
+int      UI_Y                 = 315;
+int      UI_WIDTH             = 235;
+int      UI_HEIGHT            = 300;

@@ -11,7 +11,7 @@ class CTradeToolMain{
       
       
       // INPUTS
-      double         SL_INPUT, TP_INPUT;
+      int            SL_INPUT, TP_INPUT;
       int            MAGIC_INPUT;
       int            POINTS_STEP_INPUT;
       
@@ -29,35 +29,29 @@ class CTradeToolMain{
       double         ERR_TRADE_STOP, ERR_TRADE_TARGET, ERR_TRADE_VOLUME, ERR_TRADE_ENTRY;
       
       
-      CTradeToolMain(double vol_input, double sl_input, double tp_input, int magic_input, int points_step_input);
+      CTradeToolMain(double vol_input, int sl_input, int tp_input, int magic_input, int points_step_input);
       
-      void     SetMarketLimits();
-      void     Update(double Entry, double Stop, double Target, double Vol, bool SLOn, bool TPOn, bool VolOn, int SLPoints, int TPPoints);
-      void     TradeParams(ENUM_ORDER_TYPE ord);
-      int      SendOrder(ENUM_ORDER_TYPE ord);
-      int      Error(int e);
+      void           SetInputs(double vol_input, int sl_input, int tp_input, int magic_input, int points_step_input);
+      void           SetMarketLimits();
+      void           Update(double Entry, double Stop, double Target, double Vol, bool SLOn, bool TPOn, bool VolOn, int SLPoints, int TPPoints);
+      void           TradeParams(ENUM_ORDER_TYPE ord);
+      int            SendOrder(ENUM_ORDER_TYPE ord);
+      int            Error(int e);
       
       
       // UTILITIES
-      double   util_ask()                       { return SymbolInfoDouble(SYMBOL, SYMBOL_ASK); }
-      double   util_bid()                       { return SymbolInfoDouble(SYMBOL, SYMBOL_BID); }
-      double   util_get_values(string sparam)   { return StringToDouble(ObjectGetString(0, sparam, OBJPROP_TEXT)); }
-      double   util_point()                     { return SymbolInfoDouble(SYMBOL, SYMBOL_POINT); }
+      double         util_ask()                       { return SymbolInfoDouble(SYMBOL, SYMBOL_ASK); }
+      double         util_bid()                       { return SymbolInfoDouble(SYMBOL, SYMBOL_BID); }
+      double         util_get_values(string sparam)   { return StringToDouble(ObjectGetString(0, sparam, OBJPROP_TEXT)); }
+      double         util_point()                     { return SymbolInfoDouble(SYMBOL, SYMBOL_POINT); }
       
-      string   util_invalid_order()             { return "Invalid Order Parameters for: "; }
-      void     util_logger(string message)      { PrintFormat("LOGGER: %s", message); }
+      string         util_invalid_order()             { return "Invalid Order Parameters for: "; }
+      void           util_logger(string message)      { PrintFormat("LOGGER: %s", message); }
 };
 
-CTradeToolMain::CTradeToolMain(double vol_input, double sl_input, double tp_input, int magic_input, int points_step_input){
-   SYMBOL = Symbol();
-   
-   TRADE_VOLUME = vol_input;
-   TRADE_ENTRY = 0;
-   
-   SL_INPUT = sl_input;
-   TP_INPUT = tp_input;
-   MAGIC_INPUT = magic_input;
-   POINTS_STEP_INPUT = points_step_input;
+CTradeToolMain::CTradeToolMain(double vol_input, int sl_input, int tp_input, int magic_input, int points_step_input){
+
+   SetInputs(vol_input, sl_input, tp_input, magic_input, points_step_input);
    
    FIELD_SL = "EDITSL";
    FIELD_TP = "EDITTP";
@@ -67,12 +61,28 @@ CTradeToolMain::CTradeToolMain(double vol_input, double sl_input, double tp_inpu
    SetMarketLimits();
 }
 
+void CTradeToolMain::SetInputs(double vol_input, int sl_input, int tp_input, int magic_input, int points_step_input){
+   
+   TRADE_VOLUME = vol_input;
+   TRADE_ENTRY = 0;
+   
+   SL_INPUT  = sl_input; 
+   TP_INPUT = tp_input; 
+   
+   MAGIC_INPUT = magic_input;
+   POINTS_STEP_INPUT = points_step_input;
+
+}
+
+
 void CTradeToolMain::SetMarketLimits(void){
+   SYMBOL = Symbol();
    MAX_LOT = SymbolInfoDouble(SYMBOL, SYMBOL_VOLUME_MAX);
    MIN_LOT = SymbolInfoDouble(SYMBOL, SYMBOL_VOLUME_MIN);
    LOT_STEP = SymbolInfoDouble(SYMBOL, SYMBOL_VOLUME_STEP);
    DIGITS = (int)SymbolInfoInteger(SYMBOL, SYMBOL_DIGITS);
    CONTRACT = SymbolInfoDouble(SYMBOL, SYMBOL_TRADE_CONTRACT_SIZE);  
+   
 }
 
 void CTradeToolMain::Update(double Entry,double Stop,double Target,double Vol,bool SLOn,bool TPOn,bool VolOn,int SLPoints,int TPPoints){

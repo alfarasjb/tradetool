@@ -1,7 +1,7 @@
 
 #include <B63/CObjects.mqh>
 #include "definition.mqh"
-#include <B63/CInterface.mqh>
+#include <B63/ui/CInterface.mqh>
 #include "tradetool_main.mqh"
 
 CTradeToolMain tradetool_main(InpDefLots, InpDefStop, InpDefTP, InpMagic, InpPointsStep);
@@ -28,9 +28,9 @@ class CTradeToolApp : public CInterface{
       int            APP_COL_1, APP_COL_2, APP_ROW_1, APP_ROW_2, APP_ROW_3;
       
       // MARKET
-      string         SYMBOL;
-      double         MAX_LOT, MIN_LOT, LOT_STEP, CONTRACT;
-      int            DIGITS;
+      //string         SYMBOL;
+      //double         MAX_LOT, MIN_LOT, LOT_STEP, CONTRACT;
+      //int            DIGITS;
       
    public: 
    
@@ -51,7 +51,7 @@ class CTradeToolApp : public CInterface{
       Elements_List  Elements;
       
    
-      void        SetMarketLimits();
+      //void        SetMarketLimits();
       void        InitializeUIElements();
       
       // OBJECTS
@@ -124,16 +124,7 @@ CTradeToolApp::CTradeToolApp(int ui_x, int ui_y, int ui_width, int ui_height){
    THEME_ROW_BUTTON_BORDER_COLOR       = ROW_BUTTON_BORD;
    THEME_EDIT_COLOR                    = EDIT_COLOR;
    
-   SetMarketLimits();
-}
-
-void CTradeToolApp::SetMarketLimits(void){
-   SYMBOL = Symbol();
-   MAX_LOT = SymbolInfoDouble(SYMBOL, SYMBOL_VOLUME_MAX);
-   MIN_LOT = SymbolInfoDouble(SYMBOL, SYMBOL_VOLUME_MIN);
-   LOT_STEP = SymbolInfoDouble(SYMBOL, SYMBOL_VOLUME_STEP);
-   DIGITS = (int)SymbolInfoInteger(SYMBOL, SYMBOL_DIGITS);
-   CONTRACT = SymbolInfoDouble(SYMBOL, SYMBOL_TRADE_CONTRACT_SIZE);  
+   tradetool_main.SetMarketLimits();
 }
 
 void CTradeToolApp::InitializeUIElements(){
@@ -176,7 +167,19 @@ void CTradeToolApp::InitializeUIElements(){
 
 
 
-void CTradeToolApp::DrawOrderButton(Button &button, ENUM_ORDER_TYPE order_type, string name, int x, int y_adjust, double width_factor, double height_factor, color button_color, string label_handle, string label_name, int label_adjust, int label_x_offset){
+void CTradeToolApp::DrawOrderButton(
+      Button &button, 
+      ENUM_ORDER_TYPE order_type, 
+      string name, 
+      int x, 
+      int y_adjust, 
+      double width_factor, 
+      double height_factor, 
+      color button_color, 
+      string label_handle, 
+      string label_name, 
+      int label_adjust, 
+      int label_x_offset){
    
    int DefButtonWidth = 105;
    int DefButtonHeight = 50; 
@@ -208,22 +211,18 @@ void CTradeToolApp::DrawRectLabel(RectLabel &rect, string name, int x, int y, in
 }
 
 void CTradeToolApp::DrawAdjustRow(
-   AdjustRow &adjust_element,
-   string prefix, 
-   int bg_x, 
-   int bg_y, 
-   int bg_width, 
-   int bg_height, 
-   int edit_width, 
-   int edit_height, 
-   int bt_size, 
-   string edit_text, 
-   int font_size){
+      AdjustRow &adjust_element,
+      string prefix, 
+      int bg_x, 
+      int bg_y, 
+      int bg_width, 
+      int bg_height, 
+      int edit_width, 
+      int edit_height, 
+      int bt_size, 
+      string edit_text, 
+      int font_size){
    
-   /*
-   add edit, and adjust buttons to a struct
-   
-   */
    
    const int space      = 3;
    
@@ -263,6 +262,7 @@ void CTradeToolApp::DrawAdjustRow(
 }
 
 void CTradeToolApp::DrawMainRow(Toggle &toggle_element, AdjustRow &adjust_element, string row_name, int row, string edit_text, bool state = false, bool show_switch = false, int bg_x = 50){
+
    const int button_size = 18; 
    const int space = 3;
    const int off_x = bg_x + 130 + 5;
@@ -280,9 +280,11 @@ void CTradeToolApp::DrawMainRow(Toggle &toggle_element, AdjustRow &adjust_elemen
    int EDITHEIGHT = 18;
    
    int FONTSIZE = 10;
+   
    DrawAdjustRow(adjust_element, edit_name, bg_x, row, BGWIDTH, BGHEIGHT, EDITWIDTH, EDITHEIGHT, button_size, edit_text, FONTSIZE);
    
    if (show_switch) {
+   
       UI_Switch(switch_name, off_x, row - space, button_size, button_size, state);
       
       toggle_element.switch_name = switch_name;
@@ -297,25 +299,33 @@ void CTradeToolApp::DrawMainRow(Toggle &toggle_element, AdjustRow &adjust_elemen
 
 
 void CTradeToolApp::DrawSLRow(double inp = NULL, bool state = NULL){ 
+
    inp = inp == NULL ? tradetool_main.SL_INPUT : inp;
    state = state == NULL ? tradetool_main.TRADE_SL_ON : state;
-   DrawMainRow(sl_toggle, adjust_sl, "SL", APP_ROW_1, (string)inp, state, true); 
+   DrawMainRow(sl_toggle, adjust_sl, "SL", APP_ROW_1, (string)inp, state, true);
+    
 }
 
 void CTradeToolApp::DrawTPRow(double inp = NULL, bool state = NULL){ 
+
    inp = inp == NULL ? tradetool_main.TP_INPUT : inp;
    state = state == NULL ? tradetool_main.TRADE_TP_ON : state;
    DrawMainRow(tp_toggle, adjust_tp, "TP", APP_ROW_2, (string)inp, state, true); 
+   
 }
 
 void CTradeToolApp::DrawVolRow(double inp = NULL){
+
    inp = inp == NULL ? tradetool_main.TRADE_VOLUME : inp; 
    DrawMainRow(vol_toggle, adjust_volume, "VOL", APP_ROW_3, Norm(inp, 2)); 
+   
 }
 
 void CTradeToolApp::DrawPORow(double inp = NULL){
+
    inp = inp == NULL ? tradetool_main.TRADE_ENTRY : inp;
    DrawMainRow(pending_toggle, adjust_pending, "PENDING", APP_ROW_3 - 100, (string)inp, false, false, 80);
+   
 }
 
 
@@ -340,16 +350,20 @@ void CTradeToolApp::UpdatePrice(string ask, string bid){
 //+-------------------+
 
 void CTradeToolApp::EVENT_TRADE(string sparam, CTradeToolMain &tradetool){
+
    UI_Reset_Object(sparam);
    
    int num_elements = ArraySize(order_buttons);
+   
    for (int i = 0; i < num_elements; i++){
+   
       Button current_button = order_buttons[i];
+      
       if (sparam == current_button.button_name) {
-         Print("MATCH");
-         PrintFormat("SPARAM: %s, ORDER TYPE: %s", sparam, EnumToString(current_button.button_order_type));
+      
          tradetool.SendOrder(current_button.button_order_type);
          break;
+         
       }
       // send order
       
@@ -357,85 +371,111 @@ void CTradeToolApp::EVENT_TRADE(string sparam, CTradeToolMain &tradetool){
 }
 
 void CTradeToolApp::EVENT_ADJUST(AdjustButton &adjust){
+
    string function = adjust.function;
    int multiplier = function == "decrement" ? -1 : 1;
    string parent = adjust.parent;
    string sparam = adjust.name;
    
    if (parent == adjust_sl.field_name){
+   
       int step = multiplier * tradetool_main.POINTS_STEP_INPUT;
       tradetool_main.SL_INPUT = Adjust(tradetool_main.SL_INPUT, step, sparam,0);
       DrawSLRow(tradetool_main.SL_INPUT, NULL);
       return;
+      
    } 
    
    if (parent == adjust_tp.field_name){
+   
       int step = multiplier * tradetool_main.POINTS_STEP_INPUT; 
       tradetool_main.TP_INPUT = Adjust(tradetool_main.TP_INPUT, step, sparam, 0);
       DrawTPRow(tradetool_main.TP_INPUT, NULL);
       return;
+      
    }
    
    if (parent == adjust_volume.field_name){
+   
       double step = multiplier * tradetool_main.LOT_STEP;
       tradetool_main.TRADE_VOLUME = (float)Adjust(NormLot(tradetool_main.TRADE_VOLUME), step, sparam, tradetool_main.MIN_LOT, tradetool_main.MAX_LOT);
       DrawVolRow(tradetool_main.TRADE_VOLUME);
       return;
+      
    }
    
    if (parent == adjust_pending.field_name){
+   
       double step = (multiplier * tradetool_main.POINTS_STEP_INPUT) / tradetool_main.CONTRACT; 
       tradetool_main.TRADE_ENTRY = tradetool_main.TRADE_ENTRY == 0.0 ? tradetool_main.util_bid() : tradetool_main.TRADE_ENTRY;
       tradetool_main.TRADE_ENTRY = NormLot(Adjust(tradetool_main.TRADE_ENTRY, step, sparam, 0), 6);
       DrawPORow(tradetool_main.TRADE_ENTRY);
       return;
+      
    }
    
 }
 
 void CTradeToolApp::EVENT_EDIT(string sparam){
+
    double val = tradetool_main.util_get_values(sparam);
    
    if (sparam == adjust_sl.field_name){
+   
       tradetool_main.SL_INPUT = !MinPoints(val) ? val : 0;
       DrawSLRow();
       return;      
+      
    }
    
    if (sparam == adjust_tp.field_name){
+   
       tradetool_main.TP_INPUT = !MinPoints(val) ? val : 0;
       DrawTPRow();
       return;
+      
    }
+   
    if (sparam == adjust_volume.field_name){
+   
       tradetool_main.TRADE_VOLUME = !MinLot(val) ? !MaxLot(val) ? (float)val : (float)tradetool_main.MAX_LOT : (float)tradetool_main.MIN_LOT;
       DrawVolRow();
       return;
+      
    }
+   
    if (sparam == adjust_pending.field_name){
+   
       tradetool_main.TRADE_ENTRY = val;
       DrawPORow();
       return;
+      
    }
 }
 
 void CTradeToolApp::EVENT_TOGGLE(string sparam){
+
    if (sparam == sl_toggle.on_name || sparam == sl_toggle.off_name) {
+   
       tradetool_main.TRADE_SL_ON = !tradetool_main.TRADE_SL_ON;
       DrawSLRow(NULL, tradetool_main.TRADE_SL_ON);
       return;
+      
    }
    
    if (sparam == tp_toggle.on_name || sparam == tp_toggle.off_name) {
+   
       tradetool_main.TRADE_TP_ON = !tradetool_main.TRADE_TP_ON;
       DrawTPRow(NULL, tradetool_main.TRADE_TP_ON);
       return;
+      
    }
    
 }
 
 
 void CTradeToolApp::AddObjectToList(Button &order_button, Button &list[]){
+
    int num_elements = ArraySize(list);
    
    ArrayResize(list, num_elements + 1);
@@ -450,40 +490,52 @@ void CTradeToolApp::AddObjectToList(Button &order_button, Button &list[]){
 //+-------------------+
 
 bool CTradeToolApp::ObjectIsButton(string name, Button &list[]){
+
    int num_elements = ArraySize(list);
    
    for (int i = 0; i < num_elements; i ++){
+   
       string element_name = list[i].button_name;
       if (name == element_name) return true; 
+      
    }
+   
    return false;
 }
 
 bool CTradeToolApp::ObjectIsRow(string name, AdjustRow &list[]){
+
    int num_elements = ArraySize(list);
    
    for (int i = 0; i < num_elements; i ++){
+   
       AdjustRow row_element = list[i];
       if (name == row_element.field_name) return true;
       if (name == row_element.increment.name) return true;
       if (name == row_element.decrement.name) return true;
+      
    }
+   
    return false;
 }
 
 bool CTradeToolApp::ObjectIsToggle(string name, Toggle &list[]){
+
    int num_elements = ArraySize(list);
    
    for (int i = 0; i < num_elements; i++){
+   
       Toggle toggle_element = list[i];
       if (name == toggle_element.on_name) return true;
       if (name == toggle_element.off_name) return true;
    }
+   
    return false;
 }
 
 
 AdjustButton CTradeToolApp::GetAdjustFunction(string name){
+
    int num_elements = ArraySize(adjust_row);
    
    for (int i = 0; i < num_elements ;i++){
@@ -493,12 +545,14 @@ AdjustButton CTradeToolApp::GetAdjustFunction(string name){
    }
    AdjustButton dummy;
    return dummy;
+   
 }
 
 
 
 string CTradeToolApp::Norm(double val, int digits = NULL){
-   int num_digits = digits == NULL ? DIGITS : digits; 
+
+   int num_digits = digits == NULL ? tradetool_main.DIGITS : digits; 
    
    return DoubleToString(val, num_digits);
 }
@@ -506,18 +560,19 @@ string CTradeToolApp::Norm(double val, int digits = NULL){
 
 
 bool CTradeToolApp::MinLot(double lot){
-   if (lot > MIN_LOT) return false;
+   if (lot > tradetool_main.MIN_LOT) return false;
    return true;
 }
 
 bool CTradeToolApp::MaxLot(double lot){
-   if (lot < MAX_LOT) return false;
+   if (lot < tradetool_main.MAX_LOT) return false;
    return true;
 }
 
 
 
 double CTradeToolApp::Adjust(double inp, double step, string sparam, double lower_limit = -1, double upper_limit = -1){
+
    double val = inp + step;
    UI_Reset_Object(sparam);
    if (lower_limit == -1 && upper_limit == -1) return val; 
