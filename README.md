@@ -1,7 +1,9 @@
-# TradeTool 1.2
+# TradeTool 2.0
 TradeTool is a basic order execution tool, as an alternative to MetaTrader's One Click Trading. 
 
 TradeTool allows automatically placing stop-loss, and take-profit levels, as well as pending orders. 
+
+Download TradeTool [here](https://www.mql5.com/en/market/product/105331)
 
 UI Features: 
 1. Textfields - for manually placing SL and TP points distance from current market price.
