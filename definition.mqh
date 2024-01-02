@@ -19,7 +19,7 @@ input double   InpDefLots     = 0.01; //Volume
 input int      InpDefStop     = 200; //Default SL (Points)
 input int      InpDefTP       = 200; //Default TP (Points)
 input int      InpPointsStep  = 100; //Step (Points)
-input bool     InpRunTests    = false; // Run Unit Tests
+bool     InpRunTests    = false; // Run Unit Tests
 
 
 color    DEF_FONT_COLOR       = clrWhite;
